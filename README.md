@@ -2,6 +2,13 @@
 
 Convert every page of a PDF into a JPG image — via a Streamlit web UI or the command line.
 
+## Quick start
+
+Double-click **`run.command`** in Finder. It installs anything missing, starts the
+server, and opens the app in your browser. Closing the Terminal window stops it.
+
+From a terminal, `./run.sh` does the same thing.
+
 ## Setup
 
 ```bash
