@@ -1,11 +1,31 @@
-# PDF to JPG
+# PDF Toolkit
 
-Convert every page of a PDF into a JPG image — via a Streamlit web UI or the command line.
+A local PDF workbench with a Streamlit web UI. Files are processed on your own
+machine -- nothing is uploaded anywhere.
+
+## Tools
+
+| Tool | What it does |
+|---|---|
+| PDF to JPG | Render every page as a JPG, download singly or as a ZIP |
+| Images to PDF | Combine JPG/PNG/BMP/GIF/TIFF/WEBP into one PDF, one image per page |
+| Merge PDFs | Join several PDFs in the order you upload them |
+| Split PDF | Break a PDF into one file per page |
+| Extract pages | Keep only the pages you choose (`1-3, 5, 8-10`) |
+| Delete pages | Remove the pages you choose |
+| Rotate pages | Turn selected pages 90/180/270 degrees |
+| Compress PDF | Lossless cleanup, or aggressive rasterizing for much smaller files |
+| Protect / Unlock | Add an AES-256 password, or remove a known one |
+| Extract text | Pull out the text and download it as `.txt` |
+| PDF info | Page count, size, author, encryption status |
+
+Password protected PDFs are handled throughout -- a password box appears when
+one is needed.
 
 ## Quick start
 
-Double-click **`run.command`** in Finder. It installs anything missing, starts the
-server, and opens the app in your browser. Closing the Terminal window stops it.
+Double-click **`run.command`** in Finder. It installs anything missing, starts
+the server, and opens the app in your browser. Closing the Terminal window stops it.
 
 From a terminal, `./run.sh` does the same thing.
 
@@ -13,30 +33,25 @@ From a terminal, `./run.sh` does the same thing.
 
 ```bash
 pip install -r requirements.txt
-```
-
-## Web UI
-
-```bash
 streamlit run app.py
 ```
 
-Upload a PDF, adjust DPI and quality if needed, then press **Convert**. Download the
-pages individually or all at once as a ZIP. Uploads up to 300 MB are accepted
-(configured in `.streamlit/config.toml`).
+Uploads up to 300 MB are accepted, set in `.streamlit/config.toml`.
 
 ## Command line
+
+The PDF-to-JPG conversion is also a CLI:
 
 ```bash
 python main.py file.pdf            # writes to ./file/
 python main.py file.pdf ./images   # or a directory you choose
 ```
 
-Pages are saved as `page_001.jpg`, `page_002.jpg`, ... so they sort correctly.
+## Layout
 
-## Settings
+- `ops.py` -- every PDF operation, as plain functions on bytes. No UI code.
+- `app.py` -- the Streamlit interface.
+- `main.py` -- the command line entry point.
+- `test_ops.py` -- tests. Run `python3 test_ops.py` or `pytest`.
 
-Defaults live at the top of `main.py`:
-
-- `DPI = 200` — raise to 300 for print quality, lower for smaller files
-- `QUALITY = 90` — JPEG quality, 50-100
+Defaults (`DPI = 200`, `QUALITY = 90`) live at the top of `ops.py`.
