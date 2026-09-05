@@ -1,0 +1,408 @@
+/* PDF Toolkit -- light theme polish */
+
+:root {
+    --ink: #1B1F35;
+    --muted: #6B7192;
+    --line: #E5E7F0;
+    --primary: #4F46E5;
+    --primary-2: #7C6BF5;
+    --primary-soft: #EEF0FE;
+    --card: #FFFFFF;
+    --shadow: 0 1px 2px rgba(27, 31, 53, .04), 0 8px 24px rgba(27, 31, 53, .06);
+}
+
+/* --- shell --------------------------------------------------------------- */
+
+.stApp { background: linear-gradient(180deg, #F7F8FC 0%, #F2F3FA 100%); }
+
+[data-testid="stHeader"] { background: transparent; }
+
+[data-testid="stToolbar"], [data-testid="stDecoration"], [data-testid="stStatusWidget"] {
+    display: none !important;
+}
+
+.stMainBlockContainer {
+    padding-top: 2.4rem;
+    padding-bottom: 4rem;
+    max-width: 880px;
+}
+
+/* --- sidebar ------------------------------------------------------------- */
+
+[data-testid="stSidebar"] {
+    background: var(--card);
+    border-right: 1px solid var(--line);
+}
+
+[data-testid="stSidebarContent"] { padding-top: .6rem; }
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    padding: .2rem .25rem;
+    margin: 0;
+}
+
+/* spacing and the divider live on the container, so the brand box stays
+   inside the height Streamlit gives its wrapper */
+[data-testid="stSidebar"] .stElementContainer:has(.brand) {
+    padding-bottom: .85rem;
+    margin-bottom: .1rem;
+    border-bottom: 1px solid var(--line);
+}
+
+.brand-badge {
+    width: 40px;
+    height: 40px;
+    flex: 0 0 40px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-2) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 6px 16px rgba(79, 70, 229, .35);
+}
+
+.brand-name {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.15;
+    letter-spacing: -.01em;
+}
+
+.brand-tag {
+    font-size: .74rem;
+    color: var(--muted);
+    line-height: 1.2;
+    margin-top: 2px;
+}
+
+.nav-group {
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: #9AA0BD;
+    /* No padding or margin here. Streamlit sizes the markdown wrapper from the
+       bare text, so anything that makes this box taller overflows the wrapper
+       and the next nav button draws on top of it. Space the group from the
+       outside instead, on the element container. */
+    padding: 0;
+    margin: 0;
+    line-height: 1.3;
+}
+
+[data-testid="stSidebar"] .stElementContainer:has(.nav-group) {
+    margin-top: 1.15rem;
+    margin-bottom: .3rem;
+}
+
+/* Streamlit collapses the wrapper around custom markup to zero height, so the
+   label takes no space and the next nav button draws over it -- visible only
+   where that button has a background, i.e. the active one. Give the wrappers
+   real height. */
+[data-testid="stSidebar"] .stElementContainer:has(.nav-group),
+[data-testid="stSidebar"] .stElementContainer:has(.nav-group) [data-testid="stMarkdown"],
+[data-testid="stSidebar"] .stElementContainer:has(.nav-group) [data-testid="stMarkdown"] > div {
+    height: auto !important;
+    min-height: 1.15rem !important;
+}
+
+[data-testid="stSidebar"] .stElementContainer:has(.brand),
+[data-testid="stSidebar"] .stElementContainer:has(.brand) [data-testid="stMarkdown"],
+[data-testid="stSidebar"] .stElementContainer:has(.brand) [data-testid="stMarkdown"] > div {
+    height: auto !important;
+    min-height: 2.6rem !important;
+}
+
+
+
+/* nav items: flat tertiary buttons, indigo pill when active */
+
+[data-testid="stSidebarUserContent"] [data-testid="stVerticalBlock"] {
+    gap: .1rem;
+}
+
+[data-testid="stSidebar"] .stButton > button {
+    justify-content: flex-start !important;
+    text-align: left !important;
+    font-weight: 500;
+    font-size: .89rem;
+    padding: .48rem .7rem;
+    min-height: 0;
+    border: none;
+    border-radius: 10px;
+    box-shadow: none;
+    color: #454B6B;
+    background: transparent;
+    transition: background .15s ease, color .15s ease;
+}
+
+[data-testid="stSidebar"] .stButton > button > div,
+[data-testid="stSidebar"] .stButton > button p {
+    text-align: left !important;
+    width: 100%;
+    justify-content: flex-start !important;
+}
+
+[data-testid="stSidebar"] .stButton > button:hover {
+    background: #F2F3FA;
+    color: var(--ink);
+}
+
+[data-testid="stSidebar"] [data-testid="stBaseButton-primary"] {
+    background: var(--primary-soft) !important;
+    color: var(--primary) !important;
+    font-weight: 640 !important;
+    position: relative;
+    box-shadow: none !important;
+}
+
+[data-testid="stSidebar"] [data-testid="stBaseButton-primary"]::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 18%;
+    bottom: 18%;
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+    background: var(--primary);
+}
+
+[data-testid="stSidebar"] [data-testid="stBaseButton-primary"]:hover {
+    background: #E6E9FE !important;
+}
+
+.side-note {
+    margin-top: 1.6rem;
+    padding: .7rem .8rem;
+    border-radius: 10px;
+    background: #F5F9F6;
+    border: 1px solid #DDEEE2;
+    color: #3D6B4E;
+    font-size: .74rem;
+    line-height: 1.45;
+}
+
+/* --- page head ----------------------------------------------------------- */
+
+.page-head {
+    display: flex;
+    align-items: center;
+    gap: .9rem;
+    margin-bottom: .35rem;
+}
+
+.page-icon {
+    width: 46px;
+    height: 46px;
+    flex: 0 0 46px;
+    border-radius: 13px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-2) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 6px 18px rgba(79, 70, 229, .3);
+}
+
+.page-title {
+    font-size: 1.7rem;
+    font-weight: 750;
+    color: var(--ink);
+    letter-spacing: -.025em;
+    line-height: 1.1;
+}
+
+.page-sub {
+    color: var(--muted);
+    font-size: .92rem;
+    margin: 0 0 1.4rem 0;
+}
+
+.msr {
+    font-family: 'Material Symbols Rounded', 'Material Symbols Outlined', sans-serif;
+    font-weight: 400;
+    font-style: normal;
+    font-size: 24px;
+    line-height: 1;
+    color: #fff;
+    letter-spacing: normal;
+    text-transform: none;
+    white-space: nowrap;
+    -webkit-font-feature-settings: 'liga';
+    -webkit-font-smoothing: antialiased;
+    font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+}
+
+/* --- cards --------------------------------------------------------------- */
+
+[data-testid="stVerticalBlockBorderWrapper"]:has(> div > [data-testid="stVerticalBlock"]) {
+    border-radius: 16px;
+}
+
+.stMain [data-testid="stVerticalBlockBorderWrapper"][style*="border"] {
+    background: var(--card);
+    border: 1px solid #E2E4F0 !important;
+    border-radius: 16px !important;
+    padding: 1.4rem 1.5rem !important;
+    box-shadow: var(--shadow);
+}
+
+/* --- uploader ------------------------------------------------------------ */
+
+[data-testid="stFileUploaderDropzone"] {
+    background: #FBFBFE;
+    border: 1.5px dashed #C9CDE4;
+    border-radius: 14px;
+    padding: 1.5rem 1rem;
+    transition: border-color .15s ease, background .15s ease;
+}
+
+[data-testid="stFileUploaderDropzone"]:hover {
+    border-color: var(--primary);
+    background: var(--primary-soft);
+}
+
+[data-testid="stFileUploaderDropzone"] button {
+    border-radius: 9px;
+    font-weight: 600;
+}
+
+/* --- buttons ------------------------------------------------------------- */
+
+.stMain [data-testid="stBaseButton-primary"] {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-2) 100%);
+    border: none;
+    font-weight: 640;
+    letter-spacing: .005em;
+    padding: .58rem 1.1rem;
+    box-shadow: 0 4px 14px rgba(79, 70, 229, .3);
+    transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
+}
+
+.stMain [data-testid="stBaseButton-primary"]:hover {
+    filter: brightness(1.06);
+    transform: translateY(-1px);
+    box-shadow: 0 7px 20px rgba(79, 70, 229, .38);
+}
+
+.stMain [data-testid="stBaseButton-primary"]:active { transform: translateY(0); }
+
+/* secondary downloads are outlined; primary ones keep the gradient */
+.stMain .stDownloadButton [data-testid="stBaseButton-secondary"] {
+    background: var(--card);
+    color: var(--primary);
+    border: 1.4px solid #CFD2F2;
+    font-weight: 620;
+    transition: background .15s ease, border-color .15s ease;
+}
+
+.stMain .stDownloadButton [data-testid="stBaseButton-secondary"]:hover {
+    background: var(--primary-soft);
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.stMain .stDownloadButton [data-testid="stBaseButton-primary"] {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-2) 100%);
+    color: #fff;
+    border: none;
+    font-weight: 640;
+    box-shadow: 0 4px 14px rgba(79, 70, 229, .3);
+}
+
+.stMain .stDownloadButton [data-testid="stBaseButton-primary"]:hover {
+    filter: brightness(1.06);
+    transform: translateY(-1px);
+}
+
+/* --- inputs -------------------------------------------------------------- */
+
+.stTextInput input, .stTextArea textarea, .stNumberInput input {
+    border-radius: 10px;
+}
+
+.stTextInput input:focus, .stTextArea textarea:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, .13);
+}
+
+[data-testid="stWidgetLabel"] p {
+    font-weight: 600;
+    font-size: .84rem;
+    color: #3A4062;
+}
+
+/* --- feedback ------------------------------------------------------------ */
+
+[data-testid="stAlert"] {
+    border-radius: 12px;
+    border: 1px solid transparent;
+}
+
+[data-testid="stMetric"] {
+    background: linear-gradient(135deg, #FAFAFE 0%, #F4F5FD 100%);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 1rem 1.15rem;
+}
+
+.stImage img {
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow);
+}
+
+.stImage [data-testid="stImageCaption"] {
+    color: var(--muted);
+    font-size: .78rem;
+    font-weight: 500;
+}
+
+/* --- info rows (PDF info tool) ------------------------------------------- */
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: .62rem .1rem;
+    border-bottom: 1px solid #F0F1F7;
+    font-size: .9rem;
+}
+
+.info-row:last-child { border-bottom: none; }
+.info-key { color: var(--muted); font-weight: 500; }
+.info-val { color: var(--ink); font-weight: 620; text-align: right; word-break: break-word; }
+
+/* --- misc ---------------------------------------------------------------- */
+
+.chip-row { display: flex; flex-wrap: wrap; gap: .4rem; margin: .1rem 0 .2rem; }
+
+.chip {
+    background: var(--primary-soft);
+    color: var(--primary);
+    border: 1px solid #DDE0FB;
+    border-radius: 999px;
+    padding: .22rem .7rem;
+    font-size: .78rem;
+    font-weight: 600;
+}
+
+.chip-num {
+    background: var(--primary);
+    color: #fff;
+    border-radius: 999px;
+    width: 17px;
+    height: 17px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .66rem;
+    margin-right: .4rem;
+}
+
+hr { border-color: var(--line); }
+
+footer, #MainMenu { visibility: hidden; }

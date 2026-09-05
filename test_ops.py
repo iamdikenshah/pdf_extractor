@@ -96,6 +96,81 @@ def test_info():
     assert info["Encrypted"] == "No"
 
 
+
+
+def test_parse_order():
+    assert ops.parse_order("3,1,1", 4) == [2, 0, 0]
+    assert ops.parse_order("4-1", 4) == [3, 2, 1, 0]
+    assert ops.parse_order("", 3) == [0, 1, 2]
+    for bad in ["9", "abc"]:
+        try:
+            ops.parse_order(bad, 4)
+            raise AssertionError(f"{bad!r} should have been rejected")
+        except ValueError:
+            pass
+
+
+def test_hex_to_rgb():
+    assert ops.hex_to_rgb("#000000") == (0.0, 0.0, 0.0)
+    assert ops.hex_to_rgb("#ffffff") == (1.0, 1.0, 1.0)
+
+
+def test_render_preview():
+    assert ops.render_preview(make_pdf(3), 1, dpi=60).startswith(b"\xff\xd8\xff")
+
+
+def test_add_text():
+    out = ops.add_text(make_pdf(3), "1", "Approved", position="Top right", size=12)
+    first_page = ops.extract_text(out).split("--- Page 2")[0]
+    assert "Approved" in first_page
+    try:
+        ops.add_text(make_pdf(1), "", "   ")
+        raise AssertionError("blank text should be rejected")
+    except ValueError:
+        pass
+
+
+def test_add_image():
+    stamp = ops.pdf_to_jpgs(make_pdf(1), dpi=50)[0][1]
+    out = ops.add_image(make_pdf(2), "", stamp, width_pct=20, opacity=0.5)
+    assert ops.page_count(out) == 2
+
+
+def test_watermark():
+    assert "DRAFT" in ops.extract_text(ops.add_watermark(make_pdf(2), "DRAFT"))
+
+
+def test_page_numbers():
+    text = ops.extract_text(
+        ops.add_page_numbers(make_pdf(4), template="{n} / {total}", skip_first=True)
+    )
+    assert "2 / 4" in text and "1 / 4" not in text
+
+
+def test_find_and_highlight():
+    pdf = make_pdf(3, text="Secret")
+    assert ops.find_text(pdf, "Secret") == [(1, 1), (2, 1), (3, 1)]
+    _, hits = ops.highlight_text(pdf, "Secret")
+    assert hits == 3
+    try:
+        ops.highlight_text(pdf, "nothing-here")
+        raise AssertionError("missing phrase should be rejected")
+    except ValueError:
+        pass
+
+
+def test_redact_removes_text():
+    pdf = make_pdf(2, text="Secret")
+    out, hits = ops.redact_text(pdf, "Secret")
+    assert hits == 2
+    assert "Secret" not in ops.extract_text(out)
+
+
+def test_reorder():
+    out = ops.reorder_pages(make_pdf(3), "3,2,1")
+    assert "Hello 3" in ops.extract_text(out).split("--- Page 2")[0]
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     for test in tests:

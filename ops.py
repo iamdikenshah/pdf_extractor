@@ -203,3 +203,214 @@ def pdf_info(pdf_bytes, password=None):
             "Encrypted": "Yes" if doc.needs_pass else "No",
             "First page size": f"{first.width:.0f} x {first.height:.0f} pt" if first else "-",
         }
+
+
+# --- editing ---------------------------------------------------------------
+
+POSITIONS = [
+    "Top left", "Top centre", "Top right",
+    "Middle left", "Centre", "Middle right",
+    "Bottom left", "Bottom centre", "Bottom right",
+]
+
+NUMBER_FORMATS = {"1": "{n}", "Page 1": "Page {n}", "1 / 10": "{n} / {total}"}
+
+
+def hex_to_rgb(value):
+    """'#4F46E5' -> (0.31, 0.27, 0.90)."""
+    value = value.lstrip("#")
+    return tuple(int(value[i:i + 2], 16) / 255 for i in (0, 2, 4))
+
+
+def parse_order(spec, total):
+    """Like parse_pages but keeps your order and allows repeats: '3,1,1' -> [2,0,0]."""
+    spec = (spec or "").strip()
+    if not spec:
+        return list(range(total))
+
+    order = []
+    for part in spec.split(","):
+        part = part.strip()
+        if not part:
+            continue
+        try:
+            if "-" in part:
+                a, _, b = part.partition("-")
+                start, end = int(a), int(b)
+                step = 1 if end >= start else -1
+                chunk = list(range(start, end + step, step))
+            else:
+                chunk = [int(part)]
+        except ValueError:
+            raise ValueError(f"'{part}' is not a page number or range.") from None
+        for n in chunk:
+            if not 1 <= n <= total:
+                raise ValueError(f"Page {n} does not exist in a {total}-page PDF.")
+            order.append(n - 1)
+
+    if not order:
+        raise ValueError("No pages selected.")
+    return order
+
+
+def _place(page_rect, position, width, height, margin):
+    """Top-left corner for a `width` x `height` box placed at `position`."""
+    row, _, col = position.lower().partition(" ")
+    x = {"left": margin,
+         "centre": (page_rect.width - width) / 2,
+         "right": page_rect.width - width - margin}[col]
+    y = {"top": margin,
+         "middle": (page_rect.height - height) / 2,
+         "bottom": page_rect.height - height - margin}[row]
+    return x, y
+
+
+def render_preview(pdf_bytes, index=0, dpi=90, password=None):
+    """One page as a JPG, for on-screen previews."""
+    with _open(pdf_bytes, password) as doc:
+        index = max(0, min(index, doc.page_count - 1))
+        return doc[index].get_pixmap(dpi=dpi).tobytes("jpg", jpg_quality=85)
+
+
+def add_text(pdf_bytes, spec, text, position="Bottom centre", size=14, color="#1B1F35",
+             opacity=1.0, margin=36, password=None):
+    """Stamp a line (or several) of text onto the selected pages."""
+    if not text.strip():
+        raise ValueError("Enter the text you want to add.")
+
+    lines = text.splitlines() or [text]
+    font = fitz.Font("helv")
+    rgb = hex_to_rgb(color)
+    leading = size * 1.35
+
+    with _open(pdf_bytes, password) as doc:
+        for i in parse_pages(spec, doc.page_count):
+            page = doc[i]
+            block_w = max(font.text_length(line, size) for line in lines)
+            block_h = leading * len(lines)
+            x, y = _place(page.rect, position, block_w, block_h, margin)
+            writer = fitz.TextWriter(page.rect)
+            for row, line in enumerate(lines):
+                if line.strip():
+                    writer.append(fitz.Point(x, y + size + row * leading), line,
+                                  font=font, fontsize=size)
+            writer.write_text(page, color=rgb, opacity=opacity)
+        return doc.tobytes(garbage=4, deflate=True)
+
+
+def add_image(pdf_bytes, spec, image_bytes, position="Bottom right", width_pct=25,
+              opacity=1.0, margin=36, password=None):
+    """Place an image (logo, signature, stamp) on the selected pages."""
+    pix = fitz.Pixmap(image_bytes)
+    if opacity < 1:
+        if not pix.alpha:
+            pix = fitz.Pixmap(pix, 1)
+        pix.set_alpha(bytes([int(255 * opacity)]) * (pix.width * pix.height))
+    image_bytes = pix.tobytes("png")
+    ratio = pix.height / pix.width
+
+    with _open(pdf_bytes, password) as doc:
+        for i in parse_pages(spec, doc.page_count):
+            page = doc[i]
+            width = page.rect.width * width_pct / 100
+            height = width * ratio
+            x, y = _place(page.rect, position, width, height, margin)
+            page.insert_image(fitz.Rect(x, y, x + width, y + height),
+                              stream=image_bytes, overlay=True)
+        return doc.tobytes(garbage=4, deflate=True)
+
+
+def add_watermark(pdf_bytes, text, spec="", size=60, color="#9AA0BD", opacity=0.25,
+                  angle=45, password=None):
+    """Diagonal watermark across the selected pages."""
+    if not text.strip():
+        raise ValueError("Enter the watermark text.")
+
+    font = fitz.Font("helv")
+    rgb = hex_to_rgb(color)
+
+    with _open(pdf_bytes, password) as doc:
+        for i in parse_pages(spec, doc.page_count):
+            page = doc[i]
+            width = font.text_length(text, size)
+            centre = fitz.Point(page.rect.width / 2, page.rect.height / 2)
+            writer = fitz.TextWriter(page.rect)
+            writer.append(fitz.Point(centre.x - width / 2, centre.y + size / 3), text,
+                          font=font, fontsize=size)
+            writer.write_text(page, color=rgb, opacity=opacity,
+                              morph=(centre, fitz.Matrix(angle)))
+        return doc.tobytes(garbage=4, deflate=True)
+
+
+def add_page_numbers(pdf_bytes, position="Bottom centre", start=1, template="{n}",
+                     size=10, color="#6B7192", margin=28, skip_first=False, password=None):
+    """Number the pages."""
+    font = fitz.Font("helv")
+    rgb = hex_to_rgb(color)
+
+    with _open(pdf_bytes, password) as doc:
+        total = doc.page_count
+        for i, page in enumerate(doc):
+            if skip_first and i == 0:
+                continue
+            label = template.format(n=i + start, total=total + start - 1)
+            width = font.text_length(label, size)
+            x, y = _place(page.rect, position, width, size, margin)
+            writer = fitz.TextWriter(page.rect)
+            writer.append(fitz.Point(x, y + size), label, font=font, fontsize=size)
+            writer.write_text(page, color=rgb)
+        return doc.tobytes(garbage=4, deflate=True)
+
+
+def find_text(pdf_bytes, query, password=None):
+    """Where a phrase appears: [(page number, hits), ...]."""
+    if not query.strip():
+        raise ValueError("Enter the text to search for.")
+    with _open(pdf_bytes, password) as doc:
+        return [(i + 1, len(page.search_for(query))) for i, page in enumerate(doc)
+                if page.search_for(query)]
+
+
+def highlight_text(pdf_bytes, query, color="#FFE066", password=None):
+    """Highlight every occurrence. Returns (pdf_bytes, hit count)."""
+    if not query.strip():
+        raise ValueError("Enter the text to highlight.")
+    rgb = hex_to_rgb(color)
+
+    with _open(pdf_bytes, password) as doc:
+        hits = 0
+        for page in doc:
+            for rect in page.search_for(query):
+                annot = page.add_highlight_annot(rect)
+                annot.set_colors(stroke=rgb)
+                annot.update()
+                hits += 1
+        if not hits:
+            raise ValueError(f"'{query}' was not found in this PDF.")
+        return doc.tobytes(garbage=4, deflate=True), hits
+
+
+def redact_text(pdf_bytes, query, fill="#000000", password=None):
+    """Permanently remove every occurrence. Returns (pdf_bytes, hit count)."""
+    if not query.strip():
+        raise ValueError("Enter the text to redact.")
+    rgb = hex_to_rgb(fill)
+
+    with _open(pdf_bytes, password) as doc:
+        hits = 0
+        for page in doc:
+            for rect in page.search_for(query):
+                page.add_redact_annot(rect, fill=rgb)
+                hits += 1
+            if hits:
+                page.apply_redactions()
+        if not hits:
+            raise ValueError(f"'{query}' was not found in this PDF.")
+        return doc.tobytes(garbage=4, deflate=True), hits
+
+
+def reorder_pages(pdf_bytes, spec, password=None):
+    """Rebuild the document in the given page order."""
+    with _open(pdf_bytes, password) as doc:
+        doc.select(parse_order(spec, doc.page_count))
+        return doc.tobytes(garbage=4, deflate=True)
