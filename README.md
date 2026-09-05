@@ -48,6 +48,28 @@ Two honest limits:
 Rewriting a whole paragraph with reflow is not offered, because a PDF stores
 positioned glyphs rather than editable paragraphs.
 
+## Two ways to run it
+
+**On your own machine** -- the quick start below.
+
+**As a website** -- `python3 build_web.py` produces `web/index.html`, a single
+static page that runs the whole app in the visitor's browser through
+[stlite](https://github.com/whitphx/stlite), which is Streamlit compiled to
+WebAssembly. Python and PyMuPDF are downloaded once by the browser and every
+conversion runs on the visitor's own machine, so:
+
+- no PDF is ever uploaded to a server, which keeps the privacy notice honest
+- there is no upload or download wait, and no file size limit beyond their RAM
+- speed depends on their computer, not on a shared server
+- hosting is free and static: GitHub Pages, Netlify, any web host
+
+The cost is a one-off download of about 40 MB on the first visit (roughly ten
+seconds on a fast connection), cached from then on.
+
+Pushing to `main` publishes it automatically through
+`.github/workflows/pages.yml`. Enable it once under **Settings -> Pages ->
+Build and deployment -> GitHub Actions**.
+
 ## Quick start
 
 Double-click **`run.command`** in Finder. It installs anything missing, starts
@@ -81,6 +103,7 @@ python main.py file.pdf ./images   # or a directory you choose
 - `styles.css` -- the light theme.
 - `main.py` -- the command line entry point.
 - `test_ops.py` -- tests. Run `python3 test_ops.py` or `pytest`.
+- `build_web.py` -- bundles the app into `web/index.html` for static hosting.
 
 Defaults (`DPI = 200`, `QUALITY = 90`) live at the top of `ops.py`. Theme
 colours are in `.streamlit/config.toml` and `styles.css`.
