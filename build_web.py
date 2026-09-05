@@ -4,7 +4,7 @@ Uses stlite, which is Streamlit compiled to WebAssembly. Python and PyMuPDF are
 downloaded once by the visitor's browser and everything runs on their machine,
 so no PDF is ever uploaded anywhere.
 
-    python3 build_web.py    ->  web/index.html
+    python3 build_web.py    ->  index.html
 """
 
 import json
@@ -16,7 +16,10 @@ APP_FILES = ["app.py", "ops.py", "ui.py", "editor.py", "styles.css"]
 REQUIREMENTS = ["pymupdf", "pillow", "streamlit-image-coordinates"]
 
 HERE = Path(__file__).parent
-OUT = HERE / "web" / "index.html"
+# The page lives at the repo root because that is what GitHub Pages serves in
+# its default "deploy from a branch" mode. Without a root index.html, Pages
+# hands the site to Jekyll, which publishes README.md as the home page instead.
+OUT = HERE / "index.html"
 
 
 def streamlit_config():
@@ -37,10 +40,10 @@ def build():
         indent=2,
     )
 
-    OUT.parent.mkdir(exist_ok=True)
     OUT.write_text(TEMPLATE.replace("__CONFIG__", payload).replace("__STLITE__", STLITE))
-    size = OUT.stat().st_size / 1024
-    print(f"wrote {OUT} ({size:.0f} KB) with {len(files)} app files")
+    (HERE / ".nojekyll").touch()  # stop Jekyll rewriting the page
+
+    print(f"wrote {OUT} ({OUT.stat().st_size / 1024:.0f} KB) with {len(files)} app files")
 
 
 TEMPLATE = """<!doctype html>

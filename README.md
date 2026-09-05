@@ -52,10 +52,10 @@ positioned glyphs rather than editable paragraphs.
 
 **On your own machine** -- the quick start below.
 
-**As a website** -- `python3 build_web.py` produces `web/index.html`, a single
-static page that runs the whole app in the visitor's browser through
-[stlite](https://github.com/whitphx/stlite), which is Streamlit compiled to
-WebAssembly. Python and PyMuPDF are downloaded once by the browser and every
+**As a website** -- `python3 build_web.py` regenerates `index.html` at the root of
+the repository. That single file runs the whole app in the visitor's browser
+through [stlite](https://github.com/whitphx/stlite), which is Streamlit compiled
+to WebAssembly. Python and PyMuPDF are downloaded once by the browser and every
 conversion runs on the visitor's own machine, so:
 
 - no PDF is ever uploaded to a server, which keeps the privacy notice honest
@@ -66,9 +66,13 @@ conversion runs on the visitor's own machine, so:
 The cost is a one-off download of about 40 MB on the first visit (roughly ten
 seconds on a fast connection), cached from then on.
 
-Pushing to `main` publishes it automatically through
-`.github/workflows/pages.yml`. Enable it once under **Settings -> Pages ->
-Build and deployment -> GitHub Actions**.
+GitHub Pages serves `index.html` from the repository root in its default
+"deploy from a branch" mode, so pushing to `main` publishes it. The `.nojekyll`
+file matters: without it Pages hands the repository to Jekyll, which publishes
+`README.md` as the home page instead of the app.
+
+Run `python3 build_web.py` and commit the result whenever you change the app,
+otherwise the published page keeps the previous version.
 
 ## Quick start
 
@@ -103,7 +107,8 @@ python main.py file.pdf ./images   # or a directory you choose
 - `styles.css` -- the light theme.
 - `main.py` -- the command line entry point.
 - `test_ops.py` -- tests. Run `python3 test_ops.py` or `pytest`.
-- `build_web.py` -- bundles the app into `web/index.html` for static hosting.
+- `build_web.py` -- bundles the app into `index.html` for static hosting.
+- `index.html` -- the generated page. Rebuild it with `build_web.py`.
 
 Defaults (`DPI = 200`, `QUALITY = 90`) live at the top of `ops.py`. Theme
 colours are in `.streamlit/config.toml` and `styles.css`.

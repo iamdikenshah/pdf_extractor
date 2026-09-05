@@ -9,8 +9,8 @@ from streamlit_image_coordinates import streamlit_image_coordinates as image_cli
 import ops
 import ui
 
-CANVAS_WIDTH = 820
-TOOLS = {"Edit text": "edit_note", "Add text": "text_fields"}
+CANVAS_WIDTH = 1000  # rendered size; the component scales it to fit the column
+TOOLS = ["Edit text", "Add text"]
 HINTS = {
     "Edit text": "Click a line of text on the page to rewrite it.",
     "Add text": "Click where the new text should start.",
@@ -166,8 +166,11 @@ def _canvas(page, tool, settings):
     """The page image. Returns True when something changed."""
     data = st.session_state.ed_draft
     png, _ = _render(data, page, CANVAS_WIDTH)
+    # "stretch" makes the page fit the column, which is what keeps it usable on a
+    # phone. The component reports the width it actually rendered at, so the click
+    # maths below stays correct at any size.
     value = image_click(Image.open(io.BytesIO(png)), key=f"ed_canvas_{page}",
-                        cursor="crosshair")
+                        cursor="crosshair", width="stretch")
     if not value:
         return False
 
@@ -190,6 +193,10 @@ def _canvas(page, tool, settings):
         spans = ops.page_spans(data, page)
         st.session_state.ed_span = next(
             (i for i, s in enumerate(spans) if s["bbox"] == span["bbox"]), 0)
+        # Streamlit ignores a keyed widget's index once it holds a value, so the
+        # picker would keep its old selection. Changing the key re-creates it on
+        # the clicked line, and refills the text box with that line's words.
+        _bump()
         return True
 
     try:
@@ -230,7 +237,7 @@ def render():
     with tools:
         with st.container(border=True):
             ui.step(1, "Pick a tool")
-            tool = st.pills("Tool", list(TOOLS), default="Edit text", key="ed_tool",
+            tool = st.pills("Tool", TOOLS, default="Edit text", key="ed_tool",
                             label_visibility="collapsed") or "Edit text"
             st.caption(HINTS[tool])
             st.markdown("")
