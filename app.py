@@ -5,6 +5,7 @@ import zipfile
 
 import streamlit as st
 
+import editor
 import ops
 import ui
 
@@ -509,7 +510,8 @@ def tool_edit():
     with controls:
         with st.container(border=True):
             ui.step(2, "Choose what to change")
-            action = st.selectbox("Action", EDIT_ACTIONS, label_visibility="collapsed")
+            action = st.pills("Action", EDIT_ACTIONS, default=EDIT_ACTIONS[0],
+                              label_visibility="collapsed") or EDIT_ACTIONS[0]
             st.markdown("")
             EDIT_RENDER[action](total)
 
@@ -666,7 +668,8 @@ RENDER = {
     "PDF to JPG": tool_pdf_to_jpg,
     "Images to PDF": tool_images_to_pdf,
     "Extract text": tool_text,
-    "Edit PDF": tool_edit,
+    "Edit PDF": editor.render,
+    "Apply to all pages": tool_edit,
     "Merge PDFs": tool_merge,
     "Split PDF": tool_split,
     "Extract pages": tool_extract,

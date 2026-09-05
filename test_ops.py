@@ -171,6 +171,37 @@ def test_reorder():
     assert "Hello 3" in ops.extract_text(out).split("--- Page 2")[0]
 
 
+def test_page_spans_and_span_at():
+    pdf = make_pdf(2)
+    spans = ops.page_spans(pdf, 0)
+    assert spans and "Hello 1" in spans[0]["text"]
+    box = spans[0]["bbox"]
+    mid = ((box[0] + box[2]) / 2, (box[1] + box[3]) / 2)
+    assert ops.span_at(pdf, 0, mid)["text"] == spans[0]["text"]
+    assert ops.span_at(pdf, 0, (500, 750)) is None
+
+
+def test_replace_span():
+    pdf = make_pdf(2)
+    span = ops.page_spans(pdf, 0)[0]
+    out = ops.replace_span(pdf, 0, span["bbox"], "Goodbye world", span["size"], span["color"])
+    first = ops.extract_text(out).split("--- Page 2")[0]
+    assert "Goodbye world" in first and "Hello 1" not in first
+
+
+def test_add_text_at():
+    out = ops.add_text_at(make_pdf(1), 0, (200, 300), "Signed here", size=12)
+    assert "Signed here" in ops.extract_text(out)
+
+
+def test_render_page_px_scale():
+    pdf = make_pdf(1)
+    png, pt_per_px = ops.render_page_px(pdf, 0, width_px=600)
+    width_pt, _ = ops.page_size(pdf)
+    assert png.startswith(b"\x89PNG")
+    assert abs(600 * pt_per_px - width_pt) < 1
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     for test in tests:

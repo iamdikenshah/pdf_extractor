@@ -10,7 +10,8 @@ machine -- nothing is uploaded anywhere.
 | PDF to JPG | Render every page as a JPG, download singly or as a ZIP |
 | Images to PDF | Combine JPG/PNG/BMP/GIF/TIFF/WEBP into one PDF, one image per page |
 | Extract text | Pull out the text and download it as `.txt` |
-| **Edit PDF** | Add text, images and signatures, watermarks, page numbers; highlight, redact and reorder -- with a live preview and undo |
+| **Edit PDF** | Page-by-page editor: rewrite the text already in the PDF, or click to add new text |
+| Apply to all pages | Watermarks, page numbers, stamps, find-and-highlight, find-and-redact, reorder |
 | Merge PDFs | Join several PDFs in the order you upload them |
 | Split PDF | Break a PDF into one file per page |
 | Extract pages | Keep only the pages you choose (`1-3, 5, 8-10`) |
@@ -25,22 +26,27 @@ one is needed.
 
 ### About Edit PDF
 
-Editing works as a session: upload once, apply as many changes as you like,
-watch each one land in the live preview, undo anything, then download the
-result. Available changes:
+A full width editor that works one page at a time:
 
-- **Add text** -- any position, size, colour and opacity, on chosen pages
-- **Add image or signature** -- PNG with transparency works best
-- **Watermark** -- diagonal, adjustable angle and opacity
-- **Page numbers** -- `1`, `Page 1` or `1 / 10`, optionally skipping the cover
-- **Highlight** -- every occurrence of a phrase
-- **Redact** -- permanently deletes the text from the file, not just covers it
-- **Reorder pages** -- give a new order such as `3,1,2`
+- **Edit text** -- click a line of text on the page (or pick it from the list) and
+  rewrite it. The old glyphs are removed and the new text is written in their place.
+- **Add text** -- type it, then click the page where it should start.
 
-Note that rewriting a PDF's *existing* body text is not something this (or any)
-tool can do reliably: a PDF stores positioned glyphs rather than editable
-paragraphs. Everything above works by layering onto the page, which is how PDF
-editors handle it.
+Each page is a draft until you keep it. Press **Next** with unsaved changes and the
+editor asks whether to keep them or throw them away before it moves on. **Undo**
+steps back one change, **Revert page** drops all of them, **Save this page** commits.
+The download always matches what you see on screen.
+
+Two honest limits:
+
+- The replacement text is set in Helvetica at the original size. A PDF's embedded
+  fonts are usually subsets that hold only the glyphs already used, so they cannot
+  render new characters.
+- Scanned pages contain images, not text, so there is nothing to rewrite. The
+  editor says so rather than failing quietly.
+
+Rewriting a whole paragraph with reflow is not offered, because a PDF stores
+positioned glyphs rather than editable paragraphs.
 
 ## Quick start
 

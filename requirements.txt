@@ -1,2 +1,4 @@
 pymupdf
 streamlit
+streamlit-image-coordinates
+pillow

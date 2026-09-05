@@ -414,3 +414,106 @@ def reorder_pages(pdf_bytes, spec, password=None):
     with _open(pdf_bytes, password) as doc:
         doc.select(parse_order(spec, doc.page_count))
         return doc.tobytes(garbage=4, deflate=True)
+
+
+# --- page level editing ----------------------------------------------------
+#
+# Everything below works on a single page and takes coordinates in PDF points,
+# so the editor can translate a click on a rendered image straight into a change.
+
+
+def page_size(pdf_bytes, index=0, password=None):
+    with _open(pdf_bytes, password) as doc:
+        rect = doc[index].rect
+        return rect.width, rect.height
+
+
+def render_page_px(pdf_bytes, index=0, width_px=760, password=None):
+    """Render a page to a PNG about `width_px` wide.
+
+    Returns (png_bytes, points_per_pixel) so a click on the image can be
+    converted back into PDF coordinates.
+    """
+    with _open(pdf_bytes, password) as doc:
+        page = doc[max(0, min(index, doc.page_count - 1))]
+        zoom = width_px / page.rect.width
+        pix = page.get_pixmap(matrix=fitz.Matrix(zoom, zoom))
+        return pix.tobytes("png"), 1 / zoom
+
+
+def _int_to_rgb(value):
+    return ((value >> 16) & 255) / 255, ((value >> 8) & 255) / 255, (value & 255) / 255
+
+
+def page_spans(pdf_bytes, index=0, password=None):
+    """Every run of text on the page, with its box, size and colour."""
+    with _open(pdf_bytes, password) as doc:
+        spans = []
+        for block in doc[index].get_text("dict")["blocks"]:
+            for line in block.get("lines", []):
+                for span in line["spans"]:
+                    if span["text"].strip():
+                        spans.append({
+                            "text": span["text"],
+                            "bbox": tuple(span["bbox"]),
+                            "size": span["size"],
+                            "font": span["font"],
+                            "color": _int_to_rgb(span["color"]),
+                            "origin": tuple(span["origin"]),
+                        })
+        return spans
+
+
+def span_at(pdf_bytes, index, point, password=None):
+    """The text run under a point, if any. Picks the smallest box that contains it."""
+    x, y = point
+    hits = [s for s in page_spans(pdf_bytes, index, password)
+            if s["bbox"][0] <= x <= s["bbox"][2] and s["bbox"][1] <= y <= s["bbox"][3]]
+    if not hits:
+        return None
+    return min(hits, key=lambda s: (s["bbox"][2] - s["bbox"][0]) * (s["bbox"][3] - s["bbox"][1]))
+
+
+def replace_span(pdf_bytes, index, bbox, new_text, size=None, color=None, password=None):
+    """Replace one run of text: remove the old glyphs, write the new ones in place.
+
+    The original font is not always embeddable, so the replacement is set in
+    Helvetica at the same size and colour.
+    """
+    with _open(pdf_bytes, password) as doc:
+        page = doc[index]
+        rect = fitz.Rect(bbox)
+        page.add_redact_annot(rect)
+        try:
+            page.apply_redactions(images=0, graphics=0)
+        except TypeError:  # older PyMuPDF
+            page.apply_redactions()
+
+        if new_text.strip():
+            font = fitz.Font("helv")
+            size = size or max(6, rect.height * 0.82)
+            # shrink to fit if the new text is longer than the space it replaces
+            while size > 4 and font.text_length(new_text, size) > rect.width * 1.6:
+                size -= 0.5
+            writer = fitz.TextWriter(page.rect)
+            writer.append(fitz.Point(rect.x0, rect.y1 - rect.height * 0.18), new_text,
+                          font=font, fontsize=size)
+            writer.write_text(page, color=color or (0, 0, 0))
+        return doc.tobytes(garbage=4, deflate=True)
+
+
+def add_text_at(pdf_bytes, index, point, text, size=14, color="#1B1F35",
+                opacity=1.0, password=None):
+    """Write text with its top-left corner at `point`."""
+    if not text.strip():
+        raise ValueError("Enter some text first.")
+    font = fitz.Font("helv")
+    with _open(pdf_bytes, password) as doc:
+        page = doc[index]
+        writer = fitz.TextWriter(page.rect)
+        for row, line in enumerate(text.splitlines() or [text]):
+            if line.strip():
+                writer.append(fitz.Point(point[0], point[1] + size * (row + 1)), line,
+                              font=font, fontsize=size)
+        writer.write_text(page, color=hex_to_rgb(color), opacity=opacity)
+        return doc.tobytes(garbage=4, deflate=True)
