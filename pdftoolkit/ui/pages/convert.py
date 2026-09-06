@@ -49,7 +49,7 @@ def tool_images_to_pdf():
         ui.step(1, "Choose your images")
         ups = st.file_uploader(
             "Images", type=["jpg", "jpeg", "png", "bmp", "gif", "tiff", "webp"],
-            accept_multiple_files=True,
+            accept_multiple_files=True, key="images_to_pdf_src",
         )
         if not ups:
             return

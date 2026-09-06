@@ -30,12 +30,13 @@ def setup():
 
 def sidebar_nav(current):
     """Brand block plus grouped nav. Returns the selected tool."""
+    count = sum(len(tools) for tools in GROUPS.values())
     with st.sidebar:
         st.markdown(
             f"""<div class="brand">
                 <div class="brand-badge">{_LOGO}</div>
                 <div><div class="brand-name">PDF Toolkit</div>
-                <div class="brand-tag">Eleven tools, one place</div></div>
+                <div class="brand-tag">{count} tools, one place</div></div>
             </div>""",
             unsafe_allow_html=True,
         )

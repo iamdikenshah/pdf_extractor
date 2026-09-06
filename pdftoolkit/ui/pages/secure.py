@@ -15,7 +15,7 @@ def tool_password():
             label_visibility="collapsed",
         )
         ui.step(2, "Choose your PDF")
-        up = st.file_uploader("PDF file", type="pdf")
+        up = st.file_uploader("PDF file", type="pdf", key="secure_src")
         if not up:
             return
         file_meta(up)

@@ -39,9 +39,21 @@ def sig(up, *params):
 
 
 
+def tool_key(base):
+    """A widget key scoped to the current tool.
+
+    Streamlit identifies a widget by its type, parameters and position. Two tools
+    that both call `st.file_uploader(type="pdf")` therefore share one widget, so a
+    file picked in one tool bleeds into the next and leaves it in a half-rendered
+    state. Scoping the key to the active tool gives each tool its own uploader.
+    """
+    return f"{base}__{st.session_state.get('tool', '')}"
+
+
 def upload_pdf(label="Choose a PDF file", multiple=False):
     """Uploader plus a password box that appears only when the PDF is locked."""
-    up = st.file_uploader(label, type="pdf", accept_multiple_files=multiple)
+    up = st.file_uploader(label, type="pdf", accept_multiple_files=multiple,
+                          key=tool_key("upload_pdf"))
     if multiple or not up:
         return up, None
     password = None
@@ -113,7 +125,8 @@ def _pages_input(up, pw, help_text):
 
 
 def _image_uploads(label="Choose one or more images"):
-    return st.file_uploader(label, type=IMAGE_TYPES, accept_multiple_files=True)
+    return st.file_uploader(label, type=IMAGE_TYPES, accept_multiple_files=True,
+                            key=tool_key("upload_imgs"))
 
 
 

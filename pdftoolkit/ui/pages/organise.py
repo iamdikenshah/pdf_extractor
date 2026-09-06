@@ -9,7 +9,8 @@ from ..helpers import zip_bytes, stem, sig, upload_pdf, run_button, result_card,
 def tool_merge():
     with st.container(border=True):
         ui.step(1, "Choose two or more PDFs")
-        ups = st.file_uploader("PDF files", type="pdf", accept_multiple_files=True)
+        ups = st.file_uploader("PDF files", type="pdf", accept_multiple_files=True,
+                               key="merge_pdfs_src")
         if not ups:
             return
         ui.step(2, "Merge order")
