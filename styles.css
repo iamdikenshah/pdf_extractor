@@ -17,8 +17,30 @@
 
 [data-testid="stHeader"] { background: transparent; }
 
-[data-testid="stToolbar"], [data-testid="stDecoration"], [data-testid="stStatusWidget"] {
+/* Hide the deploy button and the hamburger menu, but never the toolbar itself:
+   the control that reopens a collapsed sidebar lives inside it. */
+[data-testid="stAppDeployButton"],
+[data-testid="stMainMenu"],
+[data-testid="stMainMenuButton"],
+[data-testid="stDecoration"],
+[data-testid="stStatusWidget"] {
     display: none !important;
+}
+
+/* Make that reopen control easy to find rather than a faint glyph. */
+[data-testid="stExpandSidebarButton"] {
+    background: var(--card) !important;
+    border: 1px solid var(--line) !important;
+    border-radius: 10px !important;
+    box-shadow: 0 1px 2px rgba(27, 31, 53, .05), 0 4px 12px rgba(27, 31, 53, .06) !important;
+    color: var(--primary) !important;
+    padding: .4rem !important;
+    transition: background .15s ease, border-color .15s ease;
+}
+
+[data-testid="stExpandSidebarButton"]:hover {
+    background: var(--primary-soft) !important;
+    border-color: var(--primary) !important;
 }
 
 .stMainBlockContainer {
