@@ -45,10 +45,27 @@ def _hex_to_rgb(value):
     return tuple(int(value[i:i + 2], 16) for i in (0, 2, 4))
 
 
+# ISO base-media "ftyp" brands used by HEIF/HEIC files.
+_HEIF_BRANDS = {b"heic", b"heix", b"hevc", b"hevx", b"heim", b"heis",
+                b"hevm", b"hevs", b"mif1", b"msf1"}
+
+
+def _looks_like_heif(data):
+    return len(data) >= 12 and data[4:8] == b"ftyp" and data[8:12] in _HEIF_BRANDS
+
+
 def _load(image_bytes):
-    im = Image.open(io.BytesIO(image_bytes))
-    im.load()
-    src_format = im.format
+    if HEIC_SUPPORTED and _looks_like_heif(image_bytes):
+        # Decode HEIC/HEIF through pillow-heif directly rather than via Pillow's
+        # plugin. iPhone photos are often 10-bit HDR, which the plugin path can
+        # fail to read ("cannot identify image file"); convert_hdr_to_8bit makes
+        # them into ordinary 8-bit images.
+        im = pillow_heif.open_heif(image_bytes, convert_hdr_to_8bit=True).to_pillow()
+        src_format = "HEIF"
+    else:
+        im = Image.open(io.BytesIO(image_bytes))
+        im.load()
+        src_format = im.format
     # honour EXIF orientation so phone photos are not sideways
     im = ImageOps.exif_transpose(im)
     im.format = src_format  # exif_transpose returns a copy that drops this

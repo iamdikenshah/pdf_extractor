@@ -242,6 +242,7 @@ def test_heic_conversion():
     Image.new("RGB", (64, 48), (10, 120, 200)).save(buf, "HEIF")
     heic = buf.getvalue()
     assert "heic" in image_ops.INPUT_TYPES
+    assert image_ops._looks_like_heif(heic)  # content sniffed, not just extension
     jpg, ext = image_ops.convert(heic, "JPG")
     assert ext == "jpg" and jpg[:3] == b"\xff\xd8\xff"
     png, ext = image_ops.convert(heic, "PNG")
