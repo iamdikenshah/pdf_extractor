@@ -3,7 +3,7 @@
 import sys
 from pathlib import Path
 
-from ops import pdf_to_jpgs
+from pdftoolkit.core.pdf_ops import pdf_to_jpgs
 
 
 def pdf_to_jpg(pdf_path, out_dir=None):

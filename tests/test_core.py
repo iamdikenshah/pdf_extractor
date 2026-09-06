@@ -1,8 +1,15 @@
 """Tests for the PDF operations. Run with `python3 test_ops.py` or `pytest`."""
 
+import sys
+from pathlib import Path
+
+# Allow running this file directly (python tests/test_core.py) as well as
+# under pytest; both need the repository root on the import path.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 import fitz
 
-import ops
+from pdftoolkit.core import pdf_ops as ops
 
 
 def make_pdf(pages=5, text="Hello"):

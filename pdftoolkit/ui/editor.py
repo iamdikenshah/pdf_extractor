@@ -6,8 +6,8 @@ import streamlit as st
 from PIL import Image
 from streamlit_image_coordinates import streamlit_image_coordinates as image_click
 
-import ops
-import ui
+from ..core import pdf_ops as ops
+from . import theme as ui
 
 CANVAS_WIDTH = 1000  # rendered size; the component scales it to fit the column
 TOOLS = ["Edit text", "Add text"]

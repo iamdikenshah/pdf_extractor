@@ -99,16 +99,53 @@ python main.py file.pdf            # writes to ./file/
 python main.py file.pdf ./images   # or a directory you choose
 ```
 
-## Layout
+## Architecture
 
-- `ops.py` -- every PDF operation, as plain functions on bytes. No UI code.
-- `app.py` -- the Streamlit interface.
-- `ui.py` -- theme, icons and page chrome.
-- `styles.css` -- the light theme.
-- `main.py` -- the command line entry point.
-- `test_ops.py` -- tests. Run `python3 test_ops.py` or `pytest`.
-- `build_web.py` -- bundles the app into `index.html` for static hosting.
-- `index.html` -- the generated page. Rebuild it with `build_web.py`.
+The code is a layered package. The rule is simple: **`core` never imports from
+`ui`, and `ui` never contains PDF or image logic.** That keeps the operations
+usable from the web UI, the CLI and the tests without dragging Streamlit along.
 
-Defaults (`DPI = 200`, `QUALITY = 90`) live at the top of `ops.py`. Theme
-colours are in `.streamlit/config.toml` and `styles.css`.
+```
+pdf_extractor/
+├── app.py                    # Streamlit entrypoint (thin composition root)
+├── main.py                   # command-line entrypoint
+├── build_web.py              # bundles the package into index.html (stlite/WASM)
+├── index.html                # generated static site -- rebuild, don't edit
+├── pdftoolkit/
+│   ├── core/                 # pure logic, no UI, no Streamlit
+│   │   ├── pdf_ops.py        #   every PDF operation, functions on bytes
+│   │   └── image_ops.py      #   every image operation, functions on bytes
+│   ├── ui/                   # Streamlit presentation only
+│   │   ├── registry.py       #   the tools: metadata + menu grouping (one source)
+│   │   ├── theme.py          #   setup, sidebar, page chrome, CSS loader
+│   │   ├── helpers.py        #   shared widgets (upload, run button, downloads)
+│   │   ├── editor.py         #   the page editor (currently hidden)
+│   │   └── pages/            #   one module per tool group; each exports PAGES
+│   │       ├── convert.py    #     {name: render_fn} entries the app collects
+│   │       ├── images.py
+│   │       ├── organise.py
+│   │       ├── optimise.py
+│   │       ├── secure.py
+│   │       ├── info.py
+│   │       └── apply_all.py  #     the batch editor (currently hidden)
+│   └── assets/styles.css     # the light theme
+└── tests/test_core.py        # tests for pdftoolkit.core
+```
+
+**How a tool is wired.** `registry.py` lists each tool's icon, description and
+which group it sits in -- that alone controls the menu. Each `pages/*.py` module
+maps display names to render functions in a `PAGES` dict; `pages/__init__.py`
+merges them, and `app.py` matches the two by name. Adding a tool means writing a
+render function, adding it to its group module's `PAGES`, and adding one line to
+`registry.py`.
+
+**Two runtimes.** `app.py` runs under Streamlit locally, and `build_web.py`
+bundles the whole package into `index.html` to run in the browser via stlite
+(Pyodide/WASM). The build discovers every file under `pdftoolkit/`, so a new
+module is included automatically -- but you must re-run `python3 build_web.py`
+and commit `index.html` for the hosted site to pick up a change.
+
+Run the tests with `pytest` (config in `pyproject.toml`) or `python3
+tests/test_core.py`. Defaults (`DPI = 200`, `QUALITY = 90`) live at the top of
+`pdftoolkit/core/pdf_ops.py`; theme colours are in `.streamlit/config.toml` and
+`pdftoolkit/assets/styles.css`.

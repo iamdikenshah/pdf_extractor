@@ -12,7 +12,9 @@ import tomllib
 from pathlib import Path
 
 STLITE = "1.8.1"
-APP_FILES = ["app.py", "ops.py", "imgops.py", "ui.py", "editor.py", "styles.css"]
+# The entrypoint plus the whole package tree, discovered rather than listed so a
+# new module is bundled automatically.
+ENTRYPOINT = "app.py"
 REQUIREMENTS = ["pymupdf", "pillow", "streamlit-image-coordinates"]
 
 HERE = Path(__file__).parent
@@ -32,10 +34,20 @@ def streamlit_config():
     return flat
 
 
+def _collect_files():
+    """The entrypoint plus every .py and .css under pdftoolkit/, keyed by the
+    path stlite should write them to (preserving the package layout)."""
+    files = {ENTRYPOINT: (HERE / ENTRYPOINT).read_text()}
+    for path in sorted((HERE / "pdftoolkit").rglob("*")):
+        if path.suffix in (".py", ".css"):
+            files[path.relative_to(HERE).as_posix()] = path.read_text()
+    return files
+
+
 def build():
-    files = {name: (HERE / name).read_text() for name in APP_FILES}
+    files = _collect_files()
     payload = json.dumps(
-        {"entrypoint": "app.py", "requirements": REQUIREMENTS,
+        {"entrypoint": ENTRYPOINT, "requirements": REQUIREMENTS,
          "files": files, "streamlitConfig": streamlit_config()},
         indent=2,
     )
