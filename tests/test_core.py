@@ -7,6 +7,7 @@ from pathlib import Path
 # under pytest; both need the repository root on the import path.
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+import io
 import fitz
 
 from pdftoolkit.core import pdf_ops as ops
@@ -228,6 +229,24 @@ def test_remove_restrictions():
         raise AssertionError("should refuse a user-password PDF")
     except ValueError:
         pass
+
+
+def test_heic_conversion():
+    from pdftoolkit.core import image_ops
+    if not image_ops.HEIC_SUPPORTED:
+        return  # pillow-heif absent; skip rather than fail
+    import pillow_heif
+    pillow_heif.register_heif_opener()
+    from PIL import Image
+    buf = io.BytesIO()
+    Image.new("RGB", (64, 48), (10, 120, 200)).save(buf, "HEIF")
+    heic = buf.getvalue()
+    assert "heic" in image_ops.INPUT_TYPES
+    jpg, ext = image_ops.convert(heic, "JPG")
+    assert ext == "jpg" and jpg[:3] == b"\xff\xd8\xff"
+    png, ext = image_ops.convert(heic, "PNG")
+    assert ext == "png" and png[:4] == b"\x89PNG"
+
 
 
 if __name__ == "__main__":

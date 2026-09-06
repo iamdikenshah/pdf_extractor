@@ -6,8 +6,8 @@ import zipfile
 import streamlit as st
 
 from ..core import pdf_ops as ops
-
-IMAGE_TYPES = ["png", "jpg", "jpeg", "webp", "bmp", "gif", "tiff"]
+# Single source of the accepted image types (includes HEIC when available).
+from ..core.image_ops import INPUT_TYPES as IMAGE_TYPES
 
 PREVIEW_LIMIT = 12
 

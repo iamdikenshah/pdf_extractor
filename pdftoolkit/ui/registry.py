@@ -11,7 +11,7 @@ TOOLS = {
     "Extract text": ("notes", "Pull the text out of a PDF and save it as a file."),
     # "Edit PDF" and "Apply to all pages" are temporarily removed from the menu;
     # their code is kept in editor.py and app.py so they can be re-added later.
-    "Convert image": ("swap_horiz", "Change an image between PNG, JPG, WEBP and more."),
+    "Convert image": ("swap_horiz", "Change an image between HEIC, PNG, JPG, WEBP and more."),
     "Resize image": ("photo_size_select_large", "Scale images by size or percentage."),
     "Compress image": ("compress", "Shrink an image's file size."),
     "Rotate / Flip image": ("flip", "Turn or mirror an image."),

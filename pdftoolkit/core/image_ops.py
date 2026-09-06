@@ -10,8 +10,22 @@ import io
 
 from PIL import Image, ImageOps
 
+# HEIC/HEIF (iPhone photos) decode through pillow-heif, which registers itself
+# into Pillow. It is available both locally and in the browser build (Pyodide
+# ships it), but we still guard the import so the rest keeps working if it is
+# ever missing, in which case HEIC is simply not offered.
+try:
+    import pillow_heif
+
+    pillow_heif.register_heif_opener()
+    HEIC_SUPPORTED = True
+except Exception:  # pragma: no cover - only hit when the package is absent
+    HEIC_SUPPORTED = False
+
 # What we accept in, and what we can write out.
 INPUT_TYPES = ["png", "jpg", "jpeg", "webp", "bmp", "gif", "tiff"]
+if HEIC_SUPPORTED:
+    INPUT_TYPES += ["heic", "heif"]
 OUTPUT_FORMATS = {
     "JPG": ("JPEG", "jpg"),
     "PNG": ("PNG", "png"),

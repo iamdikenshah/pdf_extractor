@@ -15,7 +15,7 @@ STLITE = "1.8.1"
 # The entrypoint plus the whole package tree, discovered rather than listed so a
 # new module is bundled automatically.
 ENTRYPOINT = "app.py"
-REQUIREMENTS = ["pymupdf", "pillow", "streamlit-image-coordinates"]
+REQUIREMENTS = ["pymupdf", "pillow", "pillow-heif", "streamlit-image-coordinates"]
 
 HERE = Path(__file__).parent
 # The page lives at the repo root because that is what GitHub Pages serves in
