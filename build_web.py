@@ -12,7 +12,7 @@ import tomllib
 from pathlib import Path
 
 STLITE = "1.8.1"
-APP_FILES = ["app.py", "ops.py", "ui.py", "editor.py", "styles.css"]
+APP_FILES = ["app.py", "ops.py", "imgops.py", "ui.py", "editor.py", "styles.css"]
 REQUIREMENTS = ["pymupdf", "pillow", "streamlit-image-coordinates"]
 
 HERE = Path(__file__).parent
