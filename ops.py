@@ -181,6 +181,30 @@ def remove_password(pdf_bytes, password):
         return doc.tobytes(encryption=fitz.PDF_ENCRYPT_NONE, garbage=4, deflate=True)
 
 
+def remove_restrictions(pdf_bytes):
+    """Remove owner-password restrictions from a PDF that already opens freely.
+
+    Some PDFs open without a password but limit printing, copying or editing with
+    an "owner" (permissions) password. Because the content is already readable,
+    those limits can be removed without knowing that password.
+
+    This cannot open a PDF that needs a password just to be viewed: that content
+    is encrypted, and no tool can read it without the password. Such a file is
+    reported so the user is not misled.
+    """
+    doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+    if doc.needs_pass:
+        doc.close()
+        raise ValueError(
+            "This PDF needs a password just to open, so its contents are encrypted "
+            "and cannot be read without it. If you know the password, use "
+            "'Remove a password' instead."
+        )
+    data = doc.tobytes(encryption=fitz.PDF_ENCRYPT_NONE, garbage=4, deflate=True)
+    doc.close()
+    return data
+
+
 def extract_text(pdf_bytes, password=None):
     """Plain text of the whole document, with a header per page."""
     with _open(pdf_bytes, password) as doc:

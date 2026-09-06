@@ -9,12 +9,8 @@ TOOLS = {
     "PDF to JPG": ("image", "Render every page as a high quality JPG image."),
     "Images to PDF": ("picture_as_pdf", "Combine images into a single PDF, one per page."),
     "Extract text": ("notes", "Pull the text out of a PDF and save it as a file."),
-    "Edit PDF": ("edit_document",
-                 "Work page by page: rewrite the text that is already there, or click "
-                 "to add new text. Keep or discard each page as you go."),
-    "Apply to all pages": ("layers",
-                           "Watermarks, page numbers, stamps and find-and-redact across "
-                           "the whole document at once."),
+    # "Edit PDF" and "Apply to all pages" are temporarily removed from the menu;
+    # their code is kept in editor.py and app.py so they can be re-added later.
     "Merge PDFs": ("merge", "Join several PDFs into one, in the order you choose."),
     "Split PDF": ("content_cut", "Break a PDF into one separate file per page."),
     "Extract pages": ("file_copy", "Keep only the pages you select."),
@@ -28,7 +24,6 @@ TOOLS = {
 # Sidebar grouping
 GROUPS = {
     "Convert": ["PDF to JPG", "Images to PDF", "Extract text"],
-    "Edit": ["Edit PDF", "Apply to all pages"],
     "Organise": ["Merge PDFs", "Split PDF", "Extract pages", "Delete pages", "Rotate pages"],
     "Optimise": ["Compress PDF"],
     "Secure": ["Protect / Unlock"],

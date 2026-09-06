@@ -202,6 +202,27 @@ def test_render_page_px_scale():
     assert abs(600 * pt_per_px - width_pt) < 1
 
 
+def test_remove_restrictions():
+    doc = fitz.open()
+    doc.new_page().insert_text((72, 120), "Restricted", fontsize=20)
+    restricted = doc.tobytes(encryption=fitz.PDF_ENCRYPT_AES_256,
+                             owner_pw="owner", user_pw="",
+                             permissions=int(fitz.PDF_PERM_ACCESSIBILITY))
+    doc.close()
+    out = ops.remove_restrictions(restricted)
+    with fitz.open(stream=out, filetype="pdf") as freed:
+        assert not freed.needs_pass
+        assert "Restricted" in freed[0].get_text()
+
+    # a PDF that needs a password just to open must be refused, not faked
+    locked = ops.add_password(make_pdf(1), "secret")
+    try:
+        ops.remove_restrictions(locked)
+        raise AssertionError("should refuse a user-password PDF")
+    except ValueError:
+        pass
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     for test in tests:

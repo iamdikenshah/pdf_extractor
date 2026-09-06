@@ -348,8 +348,11 @@ def tool_compress():
 def tool_password():
     with st.container(border=True):
         ui.step(1, "What do you want to do?")
-        action = st.radio("Action", ["Add a password", "Remove a password"],
-                          horizontal=True, label_visibility="collapsed")
+        action = st.radio(
+            "Action",
+            ["Add a password", "Remove a password", "Remove restrictions (no password)"],
+            label_visibility="collapsed",
+        )
         ui.step(2, "Choose your PDF")
         up = st.file_uploader("PDF file", type="pdf")
         if not up:
@@ -366,7 +369,7 @@ def tool_password():
                 "Protect PDF", ":material/lock:",
             )
             name, note = f"{stem(up.name)}_protected.pdf", "Password added (AES-256)"
-        else:
+        elif action == "Remove a password":
             ui.step(3, "Enter the current password")
             pw = st.text_input("Current password", type="password")
             data = run_button(
@@ -375,6 +378,18 @@ def tool_password():
                 "Unlock PDF", ":material/lock_open:",
             )
             name, note = f"{stem(up.name)}_unlocked.pdf", "Password removed"
+        else:
+            ui.step(3, "Remove the restrictions")
+            st.caption(
+                "For PDFs that open without a password but block printing, copying "
+                "or editing. It cannot open a PDF that needs a password just to view."
+            )
+            data = run_button(
+                "unrestrict", sig(up),
+                lambda: ops.remove_restrictions(up.getvalue()),
+                "Remove restrictions", ":material/lock_open_right:",
+            )
+            name, note = f"{stem(up.name)}_unrestricted.pdf", "Restrictions removed"
 
     if data:
         result_card(note)
@@ -668,8 +683,10 @@ RENDER = {
     "PDF to JPG": tool_pdf_to_jpg,
     "Images to PDF": tool_images_to_pdf,
     "Extract text": tool_text,
-    "Edit PDF": editor.render,
-    "Apply to all pages": tool_edit,
+    # Temporarily hidden from the menu (see ui.py). Kept so re-adding is a
+    # one-line change: restore these and their ui.TOOLS / ui.GROUPS entries.
+    # "Edit PDF": editor.render,
+    # "Apply to all pages": tool_edit,
     "Merge PDFs": tool_merge,
     "Split PDF": tool_split,
     "Extract pages": tool_extract,
@@ -682,6 +699,9 @@ RENDER = {
 
 ui.setup()
 st.session_state.setdefault("tool", "PDF to JPG")
+# A session from before a tool was removed could still point at it; fall back.
+if st.session_state.tool not in RENDER:
+    st.session_state.tool = "PDF to JPG"
 tool = ui.sidebar_nav(st.session_state.tool)
 
 ui.page_head(tool)
